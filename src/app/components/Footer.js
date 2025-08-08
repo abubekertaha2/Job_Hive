@@ -1,3 +1,5 @@
+import Link from 'next/link';
+
 export default function Footer() {
   return (
     <footer className="bg-gray-800 text-white mt-16">
@@ -12,14 +14,14 @@ export default function Footer() {
             <h4 className="font-semibold mb-4">For Job Seekers</h4>
             <ul className="space-y-2 text-gray-300">
               <li>
-                <a href="/jobs" className="hover:text-white">
+                <Link href="/jobs" className="hover:text-white">
                   Browse Jobs
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="/profile" className="hover:text-white">
+                <Link href="/profile" className="hover:text-white">
                   My Profile
-                </a>
+                </Link>
               </li>
             </ul>
           </div>
@@ -28,14 +30,14 @@ export default function Footer() {
             <h4 className="font-semibold mb-4">For Employers</h4>
             <ul className="space-y-2 text-gray-300">
               <li>
-                <a href="/post_jobs" className="hover:text-white">
+                <Link href="/post_jobs" className="hover:text-white">
                   Post a Job
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="/profile" className="hover:text-white">
+                <Link href="/profile" className="hover:text-white">
                   Manage Jobs
-                </a>
+                </Link>
               </li>
             </ul>
           </div>

@@ -26,7 +26,7 @@ export default function JobDetailsPage() {
     }
 
     fetchJob();
-  }, [params.id, router]);
+  }, [params.id, router, fetchJob]);
 
   const fetchJob = async () => {
     setLoading(true);

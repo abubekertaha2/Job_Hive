@@ -21,7 +21,7 @@ export default function JobsPage() {
 
   useEffect(() => {
     fetchJobs();
-  }, [filters, pagination.currentPage]); // Dependencies for refetching jobs
+  }, [filters, pagination.currentPage, fetchJobs]); // Dependencies for refetching jobs
 
   const fetchJobs = async () => {
     setLoading(true);
