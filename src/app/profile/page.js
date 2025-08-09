@@ -95,7 +95,7 @@ export default function ProfilePage() {
   // --- Fetch Profile Data on Component Mount ---
   useEffect(() => {
     fetchUserProfile();
-  }, [router]); // router is a dependency, but fetchUserProfile itself is stable.
+  }, [router, fetchUserProfile]); // router is a dependency, but fetchUserProfile itself is stable.
 
   // --- Handle Input Changes ---
   const handleChange = (e) => {

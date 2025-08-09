@@ -49,7 +49,7 @@ export default function PostJobPage() {
     };
 
     checkUser();
-  }, [router]);
+  }, [router, checkUser]);
 
   // --- Handle Form Input Changes ---
   const handleChange = (e) => {
