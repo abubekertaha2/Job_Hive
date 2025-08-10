@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+// Make sure to import useCallback
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 
 export default function JobDetailsPage() {
@@ -14,21 +15,10 @@ export default function JobDetailsPage() {
   const params = useParams();
   const router = useRouter();
 
-  useEffect(() => {
-    const userDataString = localStorage.getItem('user');
-    if (userDataString) {
-      try {
-        setUser(JSON.parse(userDataString));
-      } catch (e) {
-        console.error('Failed to parse user data from localStorage', e);
-        localStorage.removeItem('user');
-      }
-    }
-
-    fetchJob();
-  }, [params.id, router, fetchJob]);
-
-  const fetchJob = async () => {
+  // --- CORRECTED ---
+  // Wrap fetchJob in useCallback to make its reference stable.
+  // Its dependencies are 'params.id' and 'router' because it uses them.
+  const fetchJob = useCallback(async () => {
     setLoading(true);
     try {
       const response = await fetch(`/api/jobs/${params.id}`);
@@ -46,7 +36,22 @@ export default function JobDetailsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [params.id, router]);
+
+  useEffect(() => {
+    const userDataString = localStorage.getItem('user');
+    if (userDataString) {
+      try {
+        setUser(JSON.parse(userDataString));
+      } catch (e) {
+        console.error('Failed to parse user data from localStorage', e);
+        localStorage.removeItem('user');
+      }
+    }
+
+    // Now this call is stable and won't cause an infinite loop
+    fetchJob();
+  }, [fetchJob]); // <-- The dependency array now correctly only depends on the stable function.
 
   const handleApply = async (e) => {
     e.preventDefault();

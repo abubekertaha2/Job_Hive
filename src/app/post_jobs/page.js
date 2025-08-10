@@ -1,13 +1,14 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+// Make sure to import 'useCallback'
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 
 export default function PostJobPage() {
   const router = useRouter();
-  const [user, setUser] = useState(null); // To store logged-in user data
-  const [loading, setLoading] = useState(true); // For initial user loading
-  const [submitting, setSubmitting] = useState(false); // For form submission loading
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
 
@@ -16,47 +17,48 @@ export default function PostJobPage() {
     description: '',
     company: '',
     location: '',
-    salary: '', // Optional
-    type: 'full-time', // Default job type
+    salary: '',
+    type: 'full-time',
   });
 
-  // --- Check User Authentication and Role on Load ---
-  useEffect(() => {
-    const checkUser = () => {
-      const userDataString = localStorage.getItem('user');
-      if (userDataString) {
-        try {
-          const parsedUser = JSON.parse(userDataString);
-          setUser(parsedUser);
-          // If user is logged in but not an employer, redirect
-          if (parsedUser.role !== 'employer') {
-            router.push('/'); // Redirect to homepage or a different page
-          } else {
-            // Pre-fill company name if user is an employer and has one
-            if (parsedUser.company) {
-              setJobData(prev => ({ ...prev, company: parsedUser.company }));
-            }
-          }
-        } catch (e) {
-          console.error('Failed to parse user data from localStorage', e);
-          localStorage.removeItem('user');
-          router.push('/login'); // Redirect to login if data is corrupted
-        }
-      } else {
-        router.push('/login'); // Redirect to login if no user data
-      }
-      setLoading(false); // Finished checking user
-    };
+  // --- CORRECTED ---
+  // Wrap the function in useCallback to make its reference stable.
+  // It uses the 'router' so that is its only dependency.
+  const checkUser = useCallback(() => {
+    const userDataString = localStorage.getItem('user');
+    if (userDataString) {
+      try {
+        const parsedUser = JSON.parse(userDataString);
+        setUser(parsedUser);
 
+        if (parsedUser.role !== 'employer') {
+          router.push('/');
+        } else if (parsedUser.company) {
+          setJobData(prev => ({ ...prev, company: parsedUser.company }));
+        }
+      } catch (e) {
+        console.error('Failed to parse user data from localStorage', e);
+        localStorage.removeItem('user');
+        router.push('/login');
+      }
+    } else {
+      router.push('/login');
+    }
+    setLoading(false);
+  }, [router]);
+
+  // --- Check User Authentication and Role on Load ---
+  // The dependency array now uses the stable 'checkUser' function
+  useEffect(() => {
     checkUser();
-  }, [router, checkUser]);
+  }, [checkUser]);
 
   // --- Handle Form Input Changes ---
   const handleChange = (e) => {
     const { name, value } = e.target;
     setJobData(prev => ({ ...prev, [name]: value }));
-    setError(''); // Clear errors on input change
-    setSuccessMessage(''); // Clear success message on input change
+    setError('');
+    setSuccessMessage('');
   };
 
   // --- Handle Job Post Submission ---
@@ -66,7 +68,6 @@ export default function PostJobPage() {
     setError('');
     setSuccessMessage('');
 
-    // Basic client-side validation
     if (!jobData.title || !jobData.description || !jobData.company || !jobData.location || !jobData.type) {
       setError('Please fill in all required fields (Title, Description, Company, Location, Job Type).');
       setSubmitting(false);
@@ -78,26 +79,23 @@ export default function PostJobPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          // Token is sent via HttpOnly cookie, no need for Authorization header here
         },
-        body: JSON.stringify(jobData), // Send job data to the backend
+        body: JSON.stringify(jobData),
       });
 
       const data = await response.json();
 
       if (response.ok) {
         setSuccessMessage(data.message || 'Job posted successfully!');
-        // Optionally clear the form after successful submission
         setJobData({
           title: '',
           description: '',
-          company: user?.company || '', // Reset company to user's company if available
+          company: user?.company || '',
           location: '',
           salary: '',
           type: 'full-time',
         });
       } else {
-        // Display error message from the backend
         setError(data.message || data.error || 'Failed to post job. Please try again.');
       }
     } catch (err) {
@@ -151,7 +149,6 @@ export default function PostJobPage() {
       )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Job Title */}
         <div>
           <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
             Job Title <span className="text-red-500">*</span>
@@ -168,7 +165,6 @@ export default function PostJobPage() {
           />
         </div>
 
-        {/* Company Name */}
         <div>
           <label htmlFor="company" className="block text-sm font-medium text-gray-700 mb-1">
             Company Name <span className="text-red-500">*</span>
@@ -185,7 +181,6 @@ export default function PostJobPage() {
           />
         </div>
 
-        {/* Location */}
         <div>
           <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-1">
             Location <span className="text-red-500">*</span>
@@ -202,7 +197,6 @@ export default function PostJobPage() {
           />
         </div>
 
-        {/* Job Type */}
         <div>
           <label htmlFor="type" className="block text-sm font-medium text-gray-700 mb-1">
             Job Type <span className="text-red-500">*</span>
@@ -222,7 +216,6 @@ export default function PostJobPage() {
           </select>
         </div>
 
-        {/* Salary (Optional) */}
         <div>
           <label htmlFor="salary" className="block text-sm font-medium text-gray-700 mb-1">
             Salary (Optional)
@@ -238,7 +231,6 @@ export default function PostJobPage() {
           />
         </div>
 
-        {/* Job Description */}
         <div>
           <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
             Job Description <span className="text-red-500">*</span>
@@ -255,7 +247,6 @@ export default function PostJobPage() {
           ></textarea>
         </div>
 
-        {/* Submit Button */}
         <button
           type="submit"
           disabled={submitting}

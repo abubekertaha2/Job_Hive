@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react'; // <-- ADD 'useCallback' HERE
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 
@@ -8,8 +8,8 @@ export default function ProfilePage() {
   const router = useRouter();
 
   // State for user and profile data
-  const [userData, setUserData] = useState(null); // Stores user details (name, email, role, company)
-  const [profileData, setProfileData] = useState({ // Stores profile details (bio, phone_number, etc.)
+  const [userData, setUserData] = useState(null);
+  const [profileData, setProfileData] = useState({
     bio: '',
     phone_number: '',
     address: '',
@@ -17,8 +17,8 @@ export default function ProfilePage() {
     github_url: '',
     profile_picture_url: '',
     resume_url: '',
-    profileImageFile: null, // Holds the actual file object for profile image
-    resumeFile: null, // Holds the actual file object for resume
+    profileImageFile: null,
+    resumeFile: null,
   });
 
   // State for loading and error messages
@@ -27,13 +27,13 @@ export default function ProfilePage() {
   const [successMessage, setSuccessMessage] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  // State for file previews (local file URLs for images, or file names for resumes)
+  // State for file previews
   const [profileImagePreview, setProfileImagePreview] = useState('');
   const [resumePreview, setResumePreview] = useState('');
 
   // --- Function to fetch User Profile Data ---
-  // Moved outside useEffect so it can be called again after profile update
-  const fetchUserProfile = async () => {
+  // Fix: Wrap fetchUserProfile in useCallback to prevent infinite loop
+  const fetchUserProfile = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
@@ -71,16 +71,15 @@ export default function ProfilePage() {
         resume_url: data.profile?.resume_url || '',
       }));
 
-      // Set initial previews for existing files from the database
       if (data.profile?.profile_picture_url) {
         setProfileImagePreview(data.profile.profile_picture_url);
       } else {
-        setProfileImagePreview(''); // Ensure it's explicitly empty if no URL
+        setProfileImagePreview('');
       }
       if (data.profile?.resume_url) {
         setResumePreview(data.profile.resume_url);
       } else {
-        setResumePreview(''); // Ensure it's explicitly empty if no URL
+        setResumePreview('');
       }
 
     } catch (err) {
@@ -90,14 +89,14 @@ export default function ProfilePage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [router]); // router is a dependency of useCallback, so it should be included.
 
   // --- Fetch Profile Data on Component Mount ---
   useEffect(() => {
     fetchUserProfile();
-  }, [router, fetchUserProfile]); // router is a dependency, but fetchUserProfile itself is stable.
+  }, [fetchUserProfile]); // Fix: The dependency array now only contains the memoized function.
 
-  // --- Handle Input Changes ---
+  // The rest of your code remains the same...
   const handleChange = (e) => {
     const { name, value } = e.target;
     setProfileData(prev => ({ ...prev, [name]: value }));
@@ -105,7 +104,6 @@ export default function ProfilePage() {
     setSuccessMessage('');
   };
 
-  // --- Handle File Input Changes ---
   const handleFileChange = (e) => {
     const { name, files } = e.target;
     const file = files[0];
@@ -114,13 +112,11 @@ export default function ProfilePage() {
 
     if (file) {
       if (name === 'profileImage') {
-        // Create a temporary URL for immediate client-side preview
         setProfileImagePreview(URL.createObjectURL(file));
       } else if (name === 'resume') {
-        setResumePreview(file.name); // Display file name for resume preview
+        setResumePreview(file.name);
       }
     } else {
-      // If file input is cleared, reset preview to current DB URL or empty
       if (name === 'profileImage') {
         setProfileImagePreview(profileData.profile_picture_url || '');
       } else if (name === 'resume') {
@@ -131,7 +127,6 @@ export default function ProfilePage() {
     setSuccessMessage('');
   };
 
-  // --- Handle Form Submission (Update Profile) ---
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
@@ -167,23 +162,16 @@ export default function ProfilePage() {
       const data = await res.json();
       setSuccessMessage(data.message || 'Profile updated successfully!');
 
-      // --- CRUCIAL FIX: Update Frontend State After Successful Upload ---
-      // ASSUMPTION: Your backend's PUT /api/users response will include the new 'profile_picture_url'.
-      // If it does, we update the state directly for immediate display.
       if (data.profile_picture_url) {
         setProfileData(prev => ({
           ...prev,
           profile_picture_url: data.profile_picture_url,
         }));
-        // Also update the preview state to show the newly saved permanent image
         setProfileImagePreview(data.profile_picture_url);
       } else {
-        // FALLBACK: If backend DOES NOT return the new URL, re-fetch all profile data.
-        // This is less efficient but ensures data consistency.
         await fetchUserProfile();
       }
 
-      // Clear the temporary file object from state after successful upload
       setProfileData(prev => ({ ...prev, profileImageFile: null, resumeFile: null }));
 
     } catch (err) {
@@ -194,7 +182,6 @@ export default function ProfilePage() {
     }
   };
 
-  // --- Render Loading State ---
   if (loading) {
     return (
       <div className="flex-center min-h-screen">
@@ -203,7 +190,6 @@ export default function ProfilePage() {
     );
   }
 
-  // --- Render Not Logged In State ---
   if (!userData) {
     return (
       <div className="flex-center min-h-screen flex-col">
@@ -218,7 +204,6 @@ export default function ProfilePage() {
     );
   }
 
-  // --- Main Profile Form ---
   return (
     <div className="max-w-3xl mx-auto my-8 p-6 bg-black rounded-lg shadow-xl border border-gray-200">
       <h1 className="text-3xl font-extrabold text-gray-900 mb-6 text-center">My Profile</h1>
@@ -235,7 +220,6 @@ export default function ProfilePage() {
       )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Basic User Info (Read-only from 'user' table) */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700">Name</label>
@@ -267,10 +251,8 @@ export default function ProfilePage() {
 
         <hr className="my-6 border-gray-200" />
 
-        {/* Editable Profile Fields (from 'profiles' table) */}
         <h2 className="text-2xl font-semibold text-gray-800 mb-4">Edit Profile Details</h2>
 
-        {/* Bio */}
         <div>
           <label htmlFor="bio" className="block text-sm font-medium text-gray-700">
             Bio
@@ -286,7 +268,6 @@ export default function ProfilePage() {
           ></textarea>
         </div>
 
-        {/* Phone Number */}
         <div>
           <label htmlFor="phone_number" className="block text-sm font-medium text-gray-700">
             Phone Number
@@ -302,7 +283,6 @@ export default function ProfilePage() {
           />
         </div>
 
-        {/* Address */}
         <div>
           <label htmlFor="address" className="block text-sm font-medium text-gray-700">
             Address
@@ -318,7 +298,6 @@ export default function ProfilePage() {
           />
         </div>
 
-        {/* LinkedIn URL */}
         <div>
           <label htmlFor="linkedin_url" className="block text-sm font-medium text-gray-700">
             LinkedIn URL
@@ -334,7 +313,6 @@ export default function ProfilePage() {
           />
         </div>
 
-        {/* GitHub URL */}
         <div>
           <label htmlFor="github_url" className="block text-sm font-medium text-gray-700">
             GitHub URL
@@ -350,7 +328,6 @@ export default function ProfilePage() {
           />
         </div>
 
-        {/* Profile Image Upload */}
         <div>
           <label htmlFor="profileImage" className="block text-sm font-medium text-gray-700">
             Profile Image
@@ -363,14 +340,13 @@ export default function ProfilePage() {
             onChange={handleFileChange}
             className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
           />
-          {/* --- CORRECTED IMAGE DISPLAY BLOCK --- */}
           {(profileImagePreview && profileImagePreview !== '') || (profileData.profile_picture_url && profileData.profile_picture_url !== '') ? (
             <div className="mt-2 flex items-center space-x-2">
               <Image
                 src={profileImagePreview || profileData.profile_picture_url}
                 alt="Profile Picture"
                 width={80}
-                height={80} // Height is required by Next.js Image component
+                height={80}
                 className="rounded-full object-cover"
               />
               <span className="text-sm text-gray-600">Current/New Image</span>
@@ -383,10 +359,8 @@ export default function ProfilePage() {
               <span className="text-sm text-gray-600">No profile image set</span>
             </div>
           )}
-          {/* --- END OF CORRECTED IMAGE DISPLAY BLOCK --- */}
         </div>
 
-        {/* Resume Upload */}
         <div>
           <label htmlFor="resume" className="block text-sm font-medium text-gray-700">
             Resume (PDF, DOCX)
@@ -414,7 +388,6 @@ export default function ProfilePage() {
           )}
         </div>
 
-        {/* Save Button */}
         <button
           type="submit"
           disabled={submitting}

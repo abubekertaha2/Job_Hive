@@ -1,13 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import SearchBar from '@/components/SearchBar'; // Updated import path
-import JobCard from '@/components/JobCard';   // Updated import path
+import { useState, useEffect, useCallback } from 'react';
+import SearchBar from '@/components/SearchBar';
+import JobCard from '@/components/JobCard';
 
 export default function JobsPage() {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(''); // Added error state
+  const [error, setError] = useState('');
   const [pagination, setPagination] = useState({
     currentPage: 1,
     totalPages: 1,
@@ -19,13 +19,11 @@ export default function JobsPage() {
     type: '',
   });
 
-  useEffect(() => {
-    fetchJobs();
-  }, [filters, pagination.currentPage, fetchJobs]); // Dependencies for refetching jobs
-
-  const fetchJobs = async () => {
+  // --- CORRECTED ---
+  // Wrap fetchJobs in useCallback. Its dependencies are 'filters' and 'pagination.currentPage'
+  const fetchJobs = useCallback(async () => {
     setLoading(true);
-    setError(''); // Clear previous errors
+    setError('');
     try {
       const params = new URLSearchParams();
       if (filters.search) params.append('search', filters.search);
@@ -33,7 +31,7 @@ export default function JobsPage() {
       if (filters.type) params.append('type', filters.type);
       params.append('page', pagination.currentPage.toString());
 
-      const response = await fetch(`/api/jobs?${params.toString()}`); // Use params.toString()
+      const response = await fetch(`/api/jobs?${params.toString()}`);
       const data = await response.json();
 
       if (response.ok) {
@@ -44,23 +42,26 @@ export default function JobsPage() {
           totalCount: data.totalCount,
         });
       } else {
-        // Handle API errors
         throw new Error(data.message || 'Failed to fetch jobs.');
       }
     } catch (err) {
       console.error('Error fetching jobs:', err);
       setError(err.message || 'An error occurred while fetching jobs.');
-      setJobs([]); // Clear jobs on error
-      setPagination({ currentPage: 1, totalPages: 1, totalCount: 0 }); // Reset pagination
+      setJobs([]);
+      setPagination({ currentPage: 1, totalPages: 1, totalCount: 0 });
     } finally {
       setLoading(false);
     }
-  };
+  }, [filters, pagination.currentPage]); // <-- These are the dependencies of useCallback
+
+  // The dependency array now correctly depends on the stable 'fetchJobs' function
+  useEffect(() => {
+    fetchJobs();
+  }, [fetchJobs]);
 
   const handlePageChange = (page) => {
-    if (page < 1 || page > pagination.totalPages) return; // Prevent invalid page changes
+    if (page < 1 || page > pagination.totalPages) return;
     setPagination({ ...pagination, currentPage: page });
-    // setLoading(true); // setLoading is already called in fetchJobs
   };
 
   return (
@@ -82,13 +83,11 @@ export default function JobsPage() {
         <p className="text-gray-600 font-medium">
           {pagination.totalCount} jobs found
         </p>
-        {/* Add sorting options here if desired */}
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {loading ? (
-          // Loading skeleton for better UX
-          Array.from({ length: 6 }).map((_, i) => ( // Use 'limit' from pagination
+          Array.from({ length: 6 }).map((_, i) => (
             <div key={i} className="bg-white p-6 rounded-lg shadow animate-pulse">
               <div className="h-6 bg-gray-200 rounded mb-4 w-3/4"></div>
               <div className="h-4 bg-gray-200 rounded mb-2 w-1/2"></div>
@@ -107,7 +106,6 @@ export default function JobsPage() {
         )}
       </div>
 
-      {/* Pagination Controls */}
       {pagination.totalPages > 1 && (
         <div className="flex justify-center space-x-2 mt-8">
           <button
