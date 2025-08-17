@@ -95,7 +95,6 @@ export default function ProfilePage() {
     fetchUserProfile();
   }, [fetchUserProfile]);
 
-  // The rest of your code remains the same...
   const handleChange = (e) => {
     const { name, value } = e.target;
     setProfileData(prev => ({ ...prev, [name]: value }));
@@ -139,23 +138,29 @@ export default function ProfilePage() {
     formData.append('linkedin_url', profileData.linkedin_url);
     formData.append('github_url', profileData.github_url);
 
-    // FIX #1: Use the correct field name 'profile_picture' to match the server route
+    // FIX #1: Use the correct file key name 'profileImage' to match your server route.
     if (profileData.profileImageFile) {
-      formData.append('profile_picture', profileData.profileImageFile);
+      formData.append('profileImage', profileData.profileImageFile);
     }
-    // FIX #2: Ensure the resume field name matches the server route
+
+    // Your existing resume code is correct.
     if (profileData.resumeFile) {
       formData.append('resume', profileData.resumeFile);
     }
     
-    // For now, let's append a dummy userId so the server doesn't fail.
-    // In a real app, this should come from your user authentication.
-    formData.append('userId', 'dummy-user-id-123');
+    // Pass the existing URLs so the server knows what to use if no new file is selected.
+    if (profileData.profile_picture_url) {
+        formData.append('currentProfileImageUrl', profileData.profile_picture_url);
+    }
+
+    if (profileData.resume_url) {
+        formData.append('currentResumeUrl', profileData.resume_url);
+    }
 
     try {
-      // FIX #3: Use the correct HTTP method 'POST' to match the server route
+      // FIX #2: Use the correct HTTP method 'PUT' to match your server route.
       const res = await fetch('/api/users', {
-        method: 'POST',
+        method: 'PUT',
         credentials: 'include',
         body: formData,
       });
@@ -405,6 +410,7 @@ export default function ProfilePage() {
     </div>
   );
 }
+
 
 
 // 'use client';
