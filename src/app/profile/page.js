@@ -138,12 +138,11 @@ export default function ProfilePage() {
     formData.append('linkedin_url', profileData.linkedin_url);
     formData.append('github_url', profileData.github_url);
 
-    // FIX #1: Use the correct file key name 'profileImage' to match your server route.
+    // Ensure the keys match the server's expectations
     if (profileData.profileImageFile) {
       formData.append('profileImage', profileData.profileImageFile);
     }
 
-    // Your existing resume code is correct.
     if (profileData.resumeFile) {
       formData.append('resume', profileData.resumeFile);
     }
@@ -158,9 +157,9 @@ export default function ProfilePage() {
     }
 
     try {
-      // FIX #2: Use the correct HTTP method 'PUT' to match your server route.
+      // Use the correct HTTP method 'POST' to match the updated server route.
       const res = await fetch('/api/users', {
-        method: 'PUT',
+        method: 'POST',
         credentials: 'include',
         body: formData,
       });
