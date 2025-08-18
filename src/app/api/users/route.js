@@ -164,13 +164,64 @@
 // }
 // src/app/api/users/route.js
 
-
 import { put } from '@vercel/blob';
 import { NextResponse } from 'next/server';
 import { getConnection } from '@/lib/db';
 import { verifyToken } from '@/lib/auth';
 
-// We will use a POST handler for all updates, which is a standard pattern for file uploads.
+// GET handler to fetch the user's profile and basic user data
+export async function GET(req) {
+  let connection;
+  try {
+    console.log("Starting GET request to /api/users...");
+
+    const token = req.cookies.get('token')?.value;
+    const decoded = verifyToken(token);
+
+    if (!decoded) {
+      console.log("Error: Unauthorized token for GET request.");
+      return NextResponse.json({ message: 'Unauthorized: No valid token provided.' }, { status: 401 });
+    }
+
+    connection = await getConnection();
+
+    // Fetch user data
+    const [users] = await connection.execute(
+      'SELECT id, name, email, role, company FROM user WHERE id = ?',
+      [decoded.id]
+    );
+
+    const user = users[0];
+    if (!user) {
+      console.log("User not found for GET request.");
+      return NextResponse.json({ message: 'User not found.' }, { status: 404 });
+    }
+
+    // Fetch profile data
+    const [profiles] = await connection.execute(
+      'SELECT * FROM profiles WHERE user_id = ?',
+      [decoded.id]
+    );
+
+    const profile = profiles[0] || null;
+
+    console.log("Successfully fetched user and profile data.");
+    return NextResponse.json({
+      user,
+      profile,
+    }, { status: 200 });
+
+  } catch (error) {
+    console.error('API Users GET Route Error:', error);
+    return NextResponse.json({ message: 'Internal server error.', details: error.message }, { status: 500 });
+  } finally {
+    if (connection) {
+      connection.release();
+    }
+  }
+}
+
+// POST handler to create or update the user's profile
 export async function POST(req) {
   let connection;
   try {
