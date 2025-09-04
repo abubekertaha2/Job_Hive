@@ -69,7 +69,7 @@ export default function Nav() {
               Browse Jobs
             </Link>
             {user?.role === "employer" && (
-              <Link href="/post-job" className="text-gray-700 hover:text-blue-600">
+              <Link href="/post_jobs" className="text-gray-700 hover:text-blue-600">
                 Post Job
               </Link>
             )}
