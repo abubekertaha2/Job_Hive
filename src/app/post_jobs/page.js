@@ -1,13 +1,13 @@
 'use client';
 
-// Make sure to import 'useCallback'
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useUser } from '@/context/UserContext';
 
 export default function PostJobPage() {
   const router = useRouter();
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const { user, token, loading: userLoading } = useUser();
+
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
@@ -21,37 +21,12 @@ export default function PostJobPage() {
     type: 'full-time',
   });
 
-  // --- CORRECTED ---
-  // Wrap the function in useCallback to make its reference stable.
-  // It uses the 'router' so that is its only dependency.
-  const checkUser = useCallback(() => {
-    const userDataString = localStorage.getItem('user');
-    if (userDataString) {
-      try {
-        const parsedUser = JSON.parse(userDataString);
-        setUser(parsedUser);
-
-        if (parsedUser.role !== 'employer') {
-          router.push('/');
-        } else if (parsedUser.company) {
-          setJobData(prev => ({ ...prev, company: parsedUser.company }));
-        }
-      } catch (e) {
-        console.error('Failed to parse user data from localStorage', e);
-        localStorage.removeItem('user');
-        router.push('/login');
-      }
-    } else {
-      router.push('/login');
-    }
-    setLoading(false);
-  }, [router]);
-
-  // --- Check User Authentication and Role on Load ---
-  // The dependency array now uses the stable 'checkUser' function
+  // Automatically set the company name if the user is an employer
   useEffect(() => {
-    checkUser();
-  }, [checkUser]);
+    if (user && user.role === 'employer' && user.company) {
+      setJobData(prev => ({ ...prev, company: user.company }));
+    }
+  }, [user]);
 
   // --- Handle Form Input Changes ---
   const handleChange = (e) => {
@@ -79,6 +54,9 @@ export default function PostJobPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          // --- THIS IS THE KEY FIX ---
+          // The token is required to authenticate the request
+          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify(jobData),
       });
@@ -107,7 +85,7 @@ export default function PostJobPage() {
   };
 
   // --- Render Loading State ---
-  if (loading) {
+  if (userLoading) {
     return (
       <div className="flex-center min-h-screen">
         <p className="text-lg font-semibold text-gray-700">Loading...</p>

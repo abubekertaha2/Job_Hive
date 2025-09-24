@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useUser } from '@/context/UserContext';
 
 export default function LoginPage() {
   const [formData, setFormData] = useState({
@@ -12,6 +13,9 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const router = useRouter();
+
+  // Access the login function from the context
+  const { login } = useUser();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -34,7 +38,8 @@ export default function LoginPage() {
       const data = await response.json();
 
       if (response.ok) {
-        localStorage.setItem('user', JSON.stringify(data.user));
+        // Use the login function from context to update state
+        login(data);
         router.push('/profile');
       } else {
         setError(data.message || data.error || 'Login failed. Please check your credentials.');

@@ -1,8 +1,8 @@
 import "./globals.css";
 import React from 'react';
-import Head from 'next/head';
 import Nav from './components/Nav';
 import Footer from './components/Footer';
+import { UserProvider } from './context/UserContext';
 
 export const metadata = {
   title: "Job Board",
@@ -12,21 +12,22 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <Head>
+      <head>
         <link rel="icon" href="/favico.ico" /> 
         <title>{metadata.title}</title>
         <meta name="description" content={metadata.description} />
-      </Head>
+      </head>
       <body>
-        <div className="main">
-          <div className="gradient">
-            {/* Additional content can go here */}
+        <UserProvider>
+          <div className="main">
+            <div className="gradient">
+              {/* Additional content can go here */}
+            </div>
           </div>
-        </div>
           <Nav />
           {children}
           <Footer />
-
+        </UserProvider>
       </body>
     </html>
   );

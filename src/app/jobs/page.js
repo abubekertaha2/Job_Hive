@@ -67,8 +67,8 @@ export default function JobsPage() {
   return (
     <div className="space-y-8 p-4 sm:p-6 lg:p-8 w-full max-w-7xl mx-auto">
       <div className="text-center py-4">
-        <h1 className="text-4xl font-extrabold text-gray-900 mb-4">Browse Job Opportunities</h1>
-        <p className="text-lg text-gray-600">Discover your next career move with thousands of listings.</p>
+        <h1 className="text-3xl font-extrabold text-gray-300 mb-4">Browse Job Opportunities</h1>
+        <p className="text-lg text-gray-400">Discover your next career .</p>
       </div>
 
       <SearchBar filters={filters} setFilters={setFilters} />

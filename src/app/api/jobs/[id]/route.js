@@ -1,14 +1,11 @@
 // src/app/api/jobs/[id]/route.js
 import { NextResponse } from 'next/server';
 import { getConnection } from '@/lib/db'; // Assuming you have this helper
-import { verifyToken } from '@/lib/auth'; // Assuming authentication might be needed
+import { verifyToken } from '@/lib/auth'; 
 
-export async function GET(request, { params }) { // 'params' is destructured from the second argument
+export async function GET(request, {params}) {
   let connection;
   try {
-    // Optional: Authenticate if only logged-in users can view job details
-    // const token = request.cookies.get('token')?.value;
-    // const decoded = verifyToken(token);
     // if (!decoded) {
     //   return NextResponse.json({ message: 'Unauthorized.' }, { status: 401 });
     // }
@@ -19,7 +16,7 @@ export async function GET(request, { params }) { // 'params' is destructured fro
       return NextResponse.json({ message: 'Job ID is required.' }, { status: 400 });
     }
 
-    connection = await getConnection(); // Get a database connection
+    connection = await getConnection();
 
     
     const [jobs] = await connection.execute(
