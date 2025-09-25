@@ -25,7 +25,7 @@ export default function Nav() {
   };
 
   return (
-    <nav className="bg-gray-200 shadow-lg">
+    <nav className="bg-gray-700 shadow-lg">
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center py-4">
           {/* Logo */}
@@ -44,20 +44,20 @@ export default function Nav() {
 
           {/* Desktop Nav Links */}
           <div className="hidden md:flex space-x-6">
-            <Link href="/jobs" className="text-gray-700 hover:text-blue-600">
+            <Link href="/jobs" className="text-gray-400 hover:text-blue-600">
               Browse Jobs
             </Link>
             {user?.role === 'employer' && (
               <>
                 <Link
                   href="/post_jobs"
-                  className="text-gray-700 hover:text-blue-600"
+                  className="text-gray-400 hover:text-blue-600"
                 >
                   Post Job
                 </Link>
                 <Link
                   href="/dashboard"
-                  className="text-gray-700 hover:text-blue-600"
+                  className="text-gray-400 hover:text-blue-600"
                 >
                   Dashboard
                 </Link>
@@ -79,7 +79,7 @@ export default function Nav() {
               <>
                 <Link
                   href="/profile"
-                  className="text-gray-700 hover:text-blue-600"
+                  className="text-gray-400 hover:text-blue-600"
                 >
                   {user.name}
                 </Link>
