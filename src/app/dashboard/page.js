@@ -351,7 +351,7 @@ export default function DashboardPage() {
     <div className="max-w-7xl mx-auto my-8 p-6 bg-white rounded-lg shadow-xl border border-gray-200">
       <h1 className="text-3xl font-extrabold text-gray-900 mb-2 text-center">Employer Dashboard</h1>
       <p className="text-lg text-gray-600 mb-6 text-center">
-        Welcome, {user.name}! Here are the jobs you've posted.
+        Welcome, {user.name}! Here are the jobs you&apos;ve posted.
       </p>
 
       {error && (
